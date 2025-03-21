@@ -35,21 +35,18 @@ def scrape_multiple_websites(urls, keywords):
 
             # Esperar a que aparezcan los elementos con la clase deseada
             WebDriverWait(driver, 10).until(
-                EC.presence_of_all_elements_located((By.CLASS_NAME, "imc--dogv-llistat"))
+                EC.presence_of_all_elements_located((By.CLASS_NAME, "imc--llistat"))
             )
 
             # Extraer los elementos
-            sections = driver.find_elements(By.CLASS_NAME, "imc--dogv-llistat")
+            sections = driver.find_elements(By.CLASS_NAME, "imc--llistat")
 
-            # Filtrar los textos que contienen las palabras clave
-            filtered_texts = [
-                {"text": section.text.strip()}
-                for section in sections
-                if any(kw.lower() in section.text.lower() for kw in keywords)
-            ]
-
-            # Guardar resultados
-            scraped_data.extend(filtered_texts)
+            # Filtrar y dividir el contenido en líneas
+            for section in sections:
+                lines = section.text.strip().split("\n")  # Separar por líneas
+                for line in lines:
+                    if any(kw.lower() in line.lower() for kw in keywords):
+                        scraped_data.append({"text": line.strip()})
 
     except Exception as e:
         print("❌ Error al procesar las URLs:", e)
@@ -61,7 +58,7 @@ def scrape_multiple_websites(urls, keywords):
 
 # Definir URLs y palabras clave
 urls = ["https://dogv.gva.es/es/inici"]
-keywords = ["subvención", "licitación", "oposiciones", "empleo público", "contratos"]
+keywords = ["subvención", "licitación", "contratos"]
 
 # Ejecutar la función
 scraped_data = scrape_multiple_websites(urls, keywords)
