@@ -45,10 +45,6 @@ def scrape_multiple_websites(urls, keywords):
 
             # Buscar los elementos con la clase específica que contiene la información
             sections = driver.find_elements(By.CLASS_NAME, "imc--llistat")
-            
-            # Verificar qué texto se está extrayendo realmente
-            for section in sections:
-                print("📜 Texto extraído de la sección:", section.text)
 
             # Procesar los elementos encontrados y filtrar por palabras clave
             for section in sections:
@@ -67,7 +63,7 @@ def scrape_multiple_websites(urls, keywords):
 
 # Definir URLs a analizar y palabras clave para filtrar
 urls = ["https://dogv.gva.es/es/inici"]
-keywords = ["subvención", "subvenciones", "licitación", "contrato", "contratos"]
+keywords = ["subvención", "subvenciones","SUBVENCIONES" "licitación", "contrato", "contratos"]
 
 # Ejecutar la función de scraping
 scraped_data = scrape_multiple_websites(urls, keywords)
