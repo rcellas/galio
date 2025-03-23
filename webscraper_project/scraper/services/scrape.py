@@ -51,7 +51,7 @@ def scrape_multiple_websites(urls, keywords):
                 lines = section.text.strip().split("\n")  # Separar el texto en líneas
                 for line in lines:
                     if any(kw.lower() in line.lower() for kw in keywords):
-                        scraped_data.append({"text": line.strip()})  # Agregar la línea coincidente
+                        scraped_data.append({"url": url, "title": line.strip()})  # Guardar el texto en `title`
 
     except Exception as e:
         print("❌ Error al procesar las URLs:", e)
@@ -63,7 +63,7 @@ def scrape_multiple_websites(urls, keywords):
 
 # Definir URLs a analizar y palabras clave para filtrar
 urls = ["https://dogv.gva.es/es/inici"]
-keywords = ["subvención", "subvenciones","SUBVENCIONES" "licitación", "contrato", "contratos"]
+keywords = ["subvención", "subvenciones", "licitación", "contrato", "contratos"]
 
 # Ejecutar la función de scraping
 scraped_data = scrape_multiple_websites(urls, keywords)
