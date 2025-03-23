@@ -1,17 +1,24 @@
 from django.core.management.base import BaseCommand
-from scraper.services.scrape import scrape_website
+from scraper.services.scrape import scrape_multiple_websites
 from scraper.models import ScrapedData
 
 class Command(BaseCommand):
     help = "Run the web scraper"
-    # Hereda de BaseCommand, lo que permite que este comando sea ejecutable mediante python manage.py <nombre_comando>.
 
     def handle(self, *args, **kwargs):
-        # Ejecuta función
-        data = scrape_website()
-        print("Scraped Data:", data)  # Agrega esta línea para depurar
-        # Guarda
+        # Definir URLs y palabras clave
+        urls = ["https://dogv.gva.es/es/inici"]
+        keywords = ["subvención", "licitación", "licitació", "contratació", "contractación", "contractaciones"]
+
+        # Ejecutar scraping
+        data = scrape_multiple_websites(urls, keywords)
+        print("Scraped Data:", data)  # Depuración
+
+        # Guardar en la base de datos
         for item in data:
-            ScrapedData.objects.create(title=item["title"], url=item["url"])
-        # Confirma
+            ScrapedData.objects.create(
+                url=item["url"],
+                text=item["text"]
+            )
+
         self.stdout.write(self.style.SUCCESS("Scraping completed!"))
