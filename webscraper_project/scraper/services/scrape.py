@@ -4,6 +4,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.firefox.options import Options
+import time
 
 def scrape_multiple_websites(urls, keywords):
     # Configuración del driver
@@ -30,8 +31,20 @@ def scrape_multiple_websites(urls, keywords):
             # Comprobar si hay iframes en la página
             iframes = driver.find_elements(By.TAG_NAME, "iframe")
             if iframes:
-                print(f"🔄 Se encontraron {len(iframes)} iframes. Cambiando al primero.")
+                print(f"🔄 Se encontraron {len(iframes)} iframes.")
+                
+                # Mostrar los src de los iframes para analizar si son de otro dominio
+                for i, iframe in enumerate(iframes):
+                    print(f"🔍 Iframe {i+1} src:", iframe.get_attribute("src"))
+                
+                # Cambiar al primer iframe
                 driver.switch_to.frame(iframes[0])
+                time.sleep(5)  # Espera adicional para que el contenido cargue
+
+                # Verificar si hay más iframes dentro del iframe
+                nested_iframes = driver.find_elements(By.TAG_NAME, "iframe")
+                if nested_iframes:
+                    print(f"🔄 Dentro del primer iframe hay {len(nested_iframes)} iframes adicionales.")
 
             # Esperar a que aparezcan los elementos con la clase deseada
             WebDriverWait(driver, 10).until(
@@ -40,6 +53,10 @@ def scrape_multiple_websites(urls, keywords):
 
             # Extraer los elementos
             sections = driver.find_elements(By.CLASS_NAME, "imc--llistat")
+
+            # Capturar y mostrar el contenido del iframe para verificar si hay datos
+            full_text = driver.find_element(By.TAG_NAME, "body").text.strip()
+            print(f"📜 Texto encontrado en el iframe:\n{full_text}")
 
             # Filtrar y dividir el contenido en líneas
             for section in sections:
