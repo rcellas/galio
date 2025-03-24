@@ -5,6 +5,11 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.firefox.options import Options
 import time
+from datetime import datetime
+
+def get_boe_url():
+    today = datetime.today()
+    return f"https://www.boe.es/boe/dias/{today.year}/{today.month:02d}/{today.day:02d}/"
 
 def scrape_multiple_websites(urls, keywords):
     # Configuración del driver de Selenium con opciones
@@ -43,8 +48,11 @@ def scrape_multiple_websites(urls, keywords):
             # Agregar un retraso extra para asegurar la carga completa de la página
             time.sleep(5)
 
+            # Determinar la clase a buscar según la URL
+            class_name = "sumario" if "boe.es" in url else "imc--llistat"
+            
             # Buscar los elementos con la clase específica que contiene la información
-            sections = driver.find_elements(By.CLASS_NAME, "imc--llistat")
+            sections = driver.find_elements(By.CLASS_NAME, class_name)
 
             # Procesar los elementos encontrados y filtrar por palabras clave
             for section in sections:
@@ -62,7 +70,7 @@ def scrape_multiple_websites(urls, keywords):
     return scraped_data
 
 # Definir URLs a analizar y palabras clave para filtrar
-urls = ["https://dogv.gva.es/es/inici"]
+urls = ["https://dogv.gva.es/es/inici", get_boe_url()]
 keywords = ["subvención", "subvenciones", "licitación", "contrato", "contratos"]
 
 # Ejecutar la función de scraping
