@@ -18,7 +18,7 @@ class Command(BaseCommand):
         for item in data:
             ScrapedData.objects.create(
                 url=item["url"],
-                text=item["text"]
+                title=item["title"]  # Corregido de "text" a "title"
             )
 
         self.stdout.write(self.style.SUCCESS("Scraping completed!"))
