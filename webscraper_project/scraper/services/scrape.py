@@ -97,7 +97,7 @@ def scrape_multiple_websites(urls, keywords):
 
             time.sleep(5)
 
-            if "boe.es" in url or "dogv.gva.es" in url:
+            if "boe.es" in url or "dogv.gva.es" in url or "sede.asturias.es" in url:
                 iframes = driver.find_elements(By.TAG_NAME, "iframe")
                 if iframes:
                     print(f"🔄 Se encontraron {len(iframes)} iframes en {url}. Cambiando al primero.")
@@ -106,23 +106,30 @@ def scrape_multiple_websites(urls, keywords):
                         EC.presence_of_element_located((By.TAG_NAME, "body"))
                     )
             
-            if "boe.es" in url:
-                class_name = "sumario"
-            elif "dogc.gencat.cat" in url:
-                class_name = "llistat_destacat_text_cont"
-            elif "dogv.gva.es" in url:
-                class_name = "imc--llistat"
+            if "sede.asturias.es" in url:
+                try:
+                    WebDriverWait(driver, 10).until(
+                        EC.visibility_of_element_located((By.ID, "bopa-boletin"))
+                    )
+                    sections = driver.find_elements(By.ID, "bopa-boletin")
+                except:
+                    print(f"⚠️ No se encontró el ID 'bopa-boletin' en {url}")
+                    continue
             else:
-                class_name = "section"
-
-            try:
-                WebDriverWait(driver, 10).until(
-                    EC.visibility_of_element_located((By.CLASS_NAME, class_name))
-                )
-                sections = driver.find_elements(By.CLASS_NAME, class_name)
-            except:
-                print(f"⚠️ No se encontró la clase {class_name} en {url}")
-                continue
+                class_mapping = {
+                    "boe.es": "sumario",
+                    "dogc.gencat.cat": "llistat_destacat_text_cont",
+                    "dogv.gva.es": "imc--llistat"
+                }
+                class_name = next((class_mapping[key] for key in class_mapping if key in url), "section")
+                try:
+                    WebDriverWait(driver, 10).until(
+                        EC.visibility_of_element_located((By.CLASS_NAME, class_name))
+                    )
+                    sections = driver.find_elements(By.CLASS_NAME, class_name)
+                except:
+                    print(f"⚠️ No se encontró la clase {class_name} en {url}")
+                    continue
 
             for section in sections:
                 lines = section.text.strip().split("\n")
@@ -138,7 +145,7 @@ def scrape_multiple_websites(urls, keywords):
     print("✅ Scraped Data:", scraped_data)
     return scraped_data
 
-urls = ["https://dogv.gva.es/es/inici", get_boe_url(), get_dogc_url()]
+urls = ["https://dogv.gva.es/es/inici", get_boe_url(), get_dogc_url(), "https://sede.asturias.es/ultimos-boletines?p_r_p_summaryLastBopa=true"]
 keywords = ["subvención", "subvenciones", "subvenció", "licitació", "licitación", "contrato", "contracte", "contractació", "contratos"]
 
 scraped_data = scrape_multiple_websites(urls, keywords)
