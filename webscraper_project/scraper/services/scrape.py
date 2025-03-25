@@ -58,7 +58,7 @@ def get_next_business_day(date):
 
 def get_dogc_url():
     base_dogc_number = 9377  # Reference DOGC number for 2025-03-25
-    base_date = datetime(2025, 3, 25)
+    base_date = datetime(2025, 3, 24)
     today = datetime.today()
     days_difference = (today - base_date).days
     num_dogc = base_dogc_number + days_difference
