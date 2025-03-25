@@ -65,7 +65,14 @@ def get_dogc_url():
     return f"https://dogc.gencat.cat/es/sumari-del-dogc/?numDOGC={num_dogc}"
 
 def get_boe_url():
-    date = get_next_business_day(datetime.today())
+    today = datetime.today()
+    holidays = get_catalonia_holidays(today.year)
+
+    if today.weekday() < 5 and (today.month, today.day) not in holidays:
+        date = today  # Si hoy es hábil, usa la fecha actual
+    else:
+        date = get_next_business_day(today)  # Si no, busca el próximo día hábil
+    
     return f"https://www.boe.es/boe/dias/{date.year}/{date.month:02d}/{date.day:02d}/"
 
 def scrape_multiple_websites(urls, keywords):
