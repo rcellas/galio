@@ -90,7 +90,32 @@ def scrape_multiple_websites(urls, keywords):
 
             time.sleep(5)
 
-            sections = driver.find_elements(By.TAG_NAME, "section")
+            if "boe.es" in url or "dogv.gva.es" in url:
+                iframes = driver.find_elements(By.TAG_NAME, "iframe")
+                if iframes:
+                    print(f"🔄 Se encontraron {len(iframes)} iframes en {url}. Cambiando al primero.")
+                    driver.switch_to.frame(iframes[0])
+                    WebDriverWait(driver, 10).until(
+                        EC.presence_of_element_located((By.TAG_NAME, "body"))
+                    )
+            
+            if "boe.es" in url:
+                class_name = "sumario"
+            elif "dogc.gencat.cat" in url:
+                class_name = "llistat_destacat_text_cont"
+            elif "dogv.gva.es" in url:
+                class_name = "imc--llistat"
+            else:
+                class_name = "section"
+
+            try:
+                WebDriverWait(driver, 10).until(
+                    EC.visibility_of_element_located((By.CLASS_NAME, class_name))
+                )
+                sections = driver.find_elements(By.CLASS_NAME, class_name)
+            except:
+                print(f"⚠️ No se encontró la clase {class_name} en {url}")
+                continue
 
             for section in sections:
                 lines = section.text.strip().split("\n")
