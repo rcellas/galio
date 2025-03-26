@@ -25,13 +25,14 @@ def get_easter_dates(year):
     month = (h + l - 7 * m + 114) // 31
     day = ((h + l - 7 * m + 114) % 31) + 1
     easter_sunday = datetime(year, month, day)
+    maundy_thursday = easter_sunday - timedelta(days=3)
     good_friday = easter_sunday - timedelta(days=2)
     easter_monday = easter_sunday + timedelta(days=1)
-    return good_friday, easter_monday
+    return maundy_thursday,good_friday, easter_monday
 
 # Public holidays in Catalonia (reference year 2025)
 def get_catalonia_holidays(year):
-    good_friday, easter_monday = get_easter_dates(year)
+    _,good_friday, easter_monday = get_easter_dates(year)
     return {
         (1, 1),  # New Year
         (1, 6),  # Epiphany
@@ -49,12 +50,49 @@ def get_catalonia_holidays(year):
         (12, 26)  # St. Stephen
     }
 
+# Public holidays in Madrid
+def get_madrid_holidays(year):
+    maundy_thursday,good_friday,_ = get_easter_dates(year)
+    return {
+        (1, 1),  # New Year
+        (1, 6),  # Epiphany
+        (maundy_thursday.month, maundy_thursday.day), # Maundy Thursday
+        (good_friday.month, good_friday.day), # Good Friday
+        (5, 1),  # Labor Day
+        (5, 2),  # Community of Madrid Day
+        (7, 25), # Santiago Apóstol
+        (8, 15), # Assumption
+        (11, 1),  # All Saints' Day
+        (12, 6),  # Constitution Day
+        (12, 8),  # Immaculate Conception
+        (12, 25)  # Christmas
+    }
+
 def get_next_business_day(date):
     holidays = get_catalonia_holidays(date.year)
     while True:
         date += timedelta(days=1)
         if date.weekday() < 5 and (date.month, date.day) not in holidays:
             return date
+
+def get_bocm_url():
+    base_bocm_number = 71  # Número de boletín de referencia
+    base_date = datetime(2025, 3, 26)  # Fecha de referencia
+    today = datetime.today()
+    days_difference = 0
+    date = base_date
+    while date < today:
+        date += timedelta(days=1)
+        if date.weekday() < 5 and (date.month, date.day) not in get_madrid_holidays(date.year):
+            days_difference += 1
+    num_bocm = base_bocm_number + days_difference
+    formatted_date = today.strftime('%Y%m%d')
+    base_url = f"https://www.bocm.es/boletin-completo/bocm-{formatted_date}/{num_bocm}/"
+    return [
+        base_url + "i.-comunidad-de-madrid/c%29-otras-disposiciones",
+        base_url + "i.-comunidad-de-madrid/d%29-anuncios"
+    ]
+
 
 def get_dogc_url():
     base_dogc_number = 9377  # Reference DOGC number for 2025-03-25
@@ -97,7 +135,7 @@ def scrape_multiple_websites(urls, keywords):
 
             time.sleep(5)
 
-            if "boe.es" in url or "dogv.gva.es" in url or "sede.asturias.es" in url:
+            if "boe.es" in url or "dogv.gva.es" in url or "sede.asturias.es" in url or "bocm.es" in url:
                 iframes = driver.find_elements(By.TAG_NAME, "iframe")
                 if iframes:
                     print(f"🔄 Se encontraron {len(iframes)} iframes en {url}. Cambiando al primero.")
@@ -119,7 +157,8 @@ def scrape_multiple_websites(urls, keywords):
                 class_mapping = {
                     "boe.es": "sumario",
                     "dogc.gencat.cat": "llistat_destacat_text_cont",
-                    "dogv.gva.es": "imc--llistat"
+                    "dogv.gva.es": "imc--llistat",
+                    "bocm.es": "view-grouping"
                 }
                 class_name = next((class_mapping[key] for key in class_mapping if key in url), "section")
                 try:
@@ -145,7 +184,7 @@ def scrape_multiple_websites(urls, keywords):
     print("✅ Scraped Data:", scraped_data)
     return scraped_data
 
-urls = ["https://dogv.gva.es/es/inici", get_boe_url(), get_dogc_url(), "https://sede.asturias.es/ultimos-boletines?p_r_p_summaryLastBopa=true"]
+urls = ["https://dogv.gva.es/es/inici", get_boe_url(), get_dogc_url(), "https://sede.asturias.es/ultimos-boletines?p_r_p_summaryLastBopa=true", *get_bocm_url()]
 keywords = ["subvención", "subvenciones", "subvenció", "licitació", "licitación", "contrato", "contracte", "contractació", "contratos"]
 
 scraped_data = scrape_multiple_websites(urls, keywords)
