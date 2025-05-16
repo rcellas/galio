@@ -190,10 +190,12 @@ def scrape_multiple_websites(urls, keywords):
                     continue
 
             for section in sections:
-                lines = section.text.strip().split("\n")
-                for line in lines:
-                    if any(kw.lower() in line.lower() for kw in keywords):
-                        scraped_data.append({"url": url, "title": line.strip()})
+                links = section.find_elements(By.TAG_NAME, "a")
+                for link in links:
+                    text = link.text.strip()
+                    href = link.get_attribute("href")
+                    if any(kw.lower() in text.lower() for kw in keywords):
+                        scraped_data.append({"url_base": url, "title": text, "link": href})
 
     except Exception as e:
         print("❌ Error processing URLs:", e)
