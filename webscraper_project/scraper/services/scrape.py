@@ -171,8 +171,24 @@ def scrape_multiple_websites(urls, keywords):
                         })
                     except Exception:
                         pass
+            if "sede.asturias.es" in url:
+                try:
+                    WebDriverWait(driver, 10).until(
+                        EC.presence_of_all_elements_located((By.CSS_SELECTOR, "span.pdfResultadoBopa a"))
+                    )
+                    pdf_links = driver.find_elements(By.CSS_SELECTOR, "span.pdfResultadoBopa a")
+                    for link in pdf_links:
+                        href = link.get_attribute("href")
+                        if href.endswith(".pdf"):
+                            scraped_data.append({
+                                "url": url,
+                                "pdf_url": href
+                            })
+                except Exception as e:
+                    print(f"⚠️ Error extrayendo PDFs del BOPA: {e}")
+                continue
 
-            if "dogv.gva.es" in url or "sede.asturias.es" in url or "bocm.es" in url:
+            if "dogv.gva.es" in url or "bocm.es" in url:
                 iframes = driver.find_elements(By.TAG_NAME, "iframe")
                 if iframes:
                     print(f"🔄 Se encontraron {len(iframes)} iframes en {url}. Cambiando al primero.")
