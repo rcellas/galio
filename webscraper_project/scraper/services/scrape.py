@@ -142,7 +142,19 @@ def scrape_multiple_websites(urls, keywords):
 
             time.sleep(5)
 
-            if "boe.es" in url or "dogv.gva.es" in url or "sede.asturias.es" in url or "bocm.es" in url:
+            if "boe.es" in url:
+                  # Esperar a que el elemento li.puntoPDF esté visible
+                WebDriverWait(driver, 10).until(
+                    EC.visibility_of_element_located((By.CSS_SELECTOR, "li.puntoPDF a"))
+                )
+                li_pdf = driver.find_element(By.CSS_SELECTOR, "li.puntoPDF a")
+                pdf_url = li_pdf.get_attribute("href")
+                base_boe_url = "https://www.boe.es"
+                full_pdf_url = base_boe_url + pdf_url if pdf_url.startswith("/") else pdf_url
+                print(f"📄 PDF encontrado en BOE: {full_pdf_url}")
+                scraped_data.append({"url": url, "pdf_url": full_pdf_url})
+            
+            if "dogv.gva.es" in url or "sede.asturias.es" in url or "bocm.es" in url:
                 iframes = driver.find_elements(By.TAG_NAME, "iframe")
                 if iframes:
                     print(f"🔄 Se encontraron {len(iframes)} iframes en {url}. Cambiando al primero.")
