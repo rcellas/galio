@@ -151,9 +151,27 @@ def scrape_multiple_websites(urls, keywords):
                 pdf_url = li_pdf.get_attribute("href")
                 base_boe_url = "https://www.boe.es"
                 full_pdf_url = base_boe_url + pdf_url if pdf_url.startswith("/") else pdf_url
-                print(f"📄 PDF encontrado en BOE: {full_pdf_url}")
                 scraped_data.append({"url": url, "pdf_url": full_pdf_url})
             
+            if "dogc.gencat.cat" in url:
+                WebDriverWait(driver, 10).until(
+                    EC.visibility_of_element_located((By.CSS_SELECTOR, "div.download a"))
+                )
+                download_divs = driver.find_elements(By.CSS_SELECTOR, "div.download")
+                for div_download in download_divs:
+                    try:
+                        a_tag_pdf = div_download.find_element(By.TAG_NAME, "a")
+                        pdf_url = a_tag_pdf.get_attribute("href")
+                        if pdf_url.startswith("/"):
+                            from urllib.parse import urljoin
+                            pdf_url = urljoin(url, pdf_url)
+                        scraped_data.append({
+                            "url": url,
+                            "pdf_url": pdf_url
+                        })
+                    except Exception:
+                        pass
+
             if "dogv.gva.es" in url or "sede.asturias.es" in url or "bocm.es" in url:
                 iframes = driver.find_elements(By.TAG_NAME, "iframe")
                 if iframes:
