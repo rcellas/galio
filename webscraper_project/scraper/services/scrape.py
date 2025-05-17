@@ -263,11 +263,6 @@ def scrape_multiple_websites(urls, keywords):
                     pdf_links = driver.find_elements(By.CSS_SELECTOR, "span.file a")
                     for link in pdf_links:
                         href = link.get_attribute("href")
-                        if href.lower().endswith(".pdf"):
-                            scraped_data.append({
-                                 "url": url,
-                                 "pdf_url": href
-                            })
                 except Exception as e:
                     print(f"⚠️ Error extrayendo PDFs del BOCM: {e}")
 
@@ -312,14 +307,19 @@ def scrape_multiple_websites(urls, keywords):
                 links = section.find_elements(By.TAG_NAME, "a")
                 for link in links:
                     text = link.text.strip().lower()
+                    href = link.get_attribute("href")
                     for keyword in keywords:
                         if keyword.lower() in text:
-                            scraped_data.append({
+                            data = {
                                 "url": url,
                                 "keyword": keyword,
                                 "text": link.text.strip(),
-                                "link": link.get_attribute("href")
-                            })
+                                "link": href
+                            }
+                            if href.lower().endswith(".pdf"):
+                                data["pdf_url"] = href
+                            scraped_data.append(data)
+
     except Exception as e:
         print("❌ Error processing URLs:", e)
     finally:
