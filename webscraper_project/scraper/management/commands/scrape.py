@@ -16,9 +16,12 @@ class Command(BaseCommand):
 
         # Guardar en la base de datos
         for item in data:
-            ScrapedData.objects.create(
-                url=item["url"],
-                title=item["title"]  # Corregido de "text" a "title"
-            )
+            if "url" in item and "title" in item:
+                ScrapedData.objects.create(
+                    url=item["url"],
+                    title=item["title"]
+                )
+            else:
+                print(f"Ignorando item incompleto: {item}")
 
         self.stdout.write(self.style.SUCCESS("Scraping completed!"))
