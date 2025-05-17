@@ -30,61 +30,75 @@ def get_easter_dates(year):
     easter_monday = easter_sunday + timedelta(days=1)
     return maundy_thursday,good_friday, easter_monday
 
-# Public holidays in Catalonia (reference year 2025)
-def get_catalonia_holidays(year):
-    _,good_friday, easter_monday = get_easter_dates(year)
+def get_spain_holidays(year):
+    _, good_friday, _ = get_easter_dates(year)
     return {
-        (1, 1),  # New Year
-        (1, 6),  # Epiphany
-        (good_friday.month, good_friday.day),  # Good Friday
-        (easter_monday.month, easter_monday.day),  # Easter Monday
-        (5, 1),  # Labor Day
-        (6, 24), # St. John
-        (8, 15), # Assumption
-        (9, 11), # Catalonia Day
-        (10, 12), # Spanish National Day
-        (11, 1),  # All Saints' Day
-        (12, 6),  # Constitution Day
-        (12, 8),  # Immaculate Conception
-        (12, 25), # Christmas
-        (12, 26)  # St. Stephen
+        (1, 1),  
+        (1, 6),  
+        (good_friday.month, good_friday.day),  
+        (5, 1),
+        (8, 15),  
+        (10, 12),  
+        (11, 1), 
+        (12, 6),  
+        (12, 8),  
+        (12, 25),  
     }
+
+
+# Public holidays in Catalonia
+def get_catalonia_holidays(year):
+    spain = get_spain_holidays(year)
+    _, _, easter_monday = get_easter_dates(year)
+    return spain | {
+        (easter_monday.month, easter_monday.day),  
+        (6, 24), 
+        (9, 11),  
+        (12, 26),  
+    }
+
 
 # Public holidays in Madrid
 def get_madrid_holidays(year):
-    maundy_thursday,good_friday,_ = get_easter_dates(year)
-    return {
-        (1, 1),  # New Year
-        (1, 6),  # Epiphany
-        (maundy_thursday.month, maundy_thursday.day), # Maundy Thursday
-        (good_friday.month, good_friday.day), # Good Friday
-        (5, 1),  # Labor Day
-        (5, 2),  # Community of Madrid Day
-        (7, 25), # Santiago Apóstol
-        (8, 15), # Assumption
-        (11, 1),  # All Saints' Day
-        (12, 6),  # Constitution Day
-        (12, 8),  # Immaculate Conception
-        (12, 25)  # Christmas
+    spain = get_spain_holidays(year)
+    maundy_thursday, _, _ = get_easter_dates(year)
+    return spain | {
+        (maundy_thursday.month, maundy_thursday.day),
+        (5, 2),  
+        (7, 25),
     }
 
-def get_next_business_day(date):
-    holidays = get_catalonia_holidays(date.year)
-    while True:
-        date += timedelta(days=1)
-        if date.weekday() < 5 and (date.month, date.day) not in holidays:
-            return date
+def get_holidays(year, region):
+    if region == "madrid":
+        return get_madrid_holidays(year)
+    elif region == "catalonia":
+        return get_catalonia_holidays(year)
+    elif region == "spain":
+        return get_spain_holidays(year)
+    else:
+        raise ValueError("Región no reconocida. Usa 'catalonia', 'madrid' o 'spain'.")
+
+
+def get_previous_business_day(date, region):
+    holidays = get_holidays(date.year, region)
+    while date.weekday() >= 5 or (date.month, date.day) in holidays:
+        date -= timedelta(days=1)
+    return date
+
 
 def get_bocm_url():
-    base_bocm_number = 72  # Número de boletín de referencia
-    base_date = datetime(2025, 3, 26)  # Fecha de referencia
-    today = datetime.today()
+    base_bocm_number = 116  
+    base_date = datetime(2025, 5, 16)
+
+    today = get_previous_business_day(datetime.today(), "madrid")
+    
     days_difference = 0
     date = base_date
     while date < today:
         date += timedelta(days=1)
-        if date.weekday() < 5 and (date.month, date.day) not in get_madrid_holidays(date.year):
+        if date.weekday() < 5 and (date.month, date.day) not in get_holidays(date.year, "madrid"):
             days_difference += 1
+
     num_bocm = base_bocm_number + days_difference
     formatted_date = today.strftime('%Y%m%d')
     base_url = f"https://www.bocm.es/boletin-completo/bocm-{formatted_date}/{num_bocm}/"
@@ -95,28 +109,28 @@ def get_bocm_url():
 
 
 def get_dogc_url():
-    base_dogc_number = 9376  # Reference DOGC number for 2025-03-25
-    base_date = datetime(2025, 3, 24)
+    base_dogc_number = 9414 
+    base_date = datetime(2025, 5, 16)
     today = datetime.today()
     days_difference = 0
     date = base_date
     while date < today:
         date += timedelta(days=1)
-        if date.weekday() < 5 and (date.month, date.day) not in get_catalonia_holidays(date.year):
+        if date.weekday() < 5 and (date.month, date.day) not in get_holidays(date.year, "catalonia"):
             days_difference += 1
-
     num_dogc = base_dogc_number + days_difference
     return f"https://dogc.gencat.cat/es/sumari-del-dogc/?numDOGC={num_dogc}"
+
 
 
 def get_boe_url():
     today = datetime.today()
     holidays = get_catalonia_holidays(today.year)
 
-    if today.weekday() < 5 and (today.month, today.day) not in holidays:
-        date = today  # Si hoy es hábil, usa la fecha actual
+    if today.weekday() < 6 and (today.month, today.day) not in holidays:
+        date = today  
     else:
-        date = get_next_business_day(today)  # Si no, busca el próximo día hábil
+        date = get_previous_business_day(today,"spain")  
     
     return f"https://www.boe.es/boe/dias/{date.year}/{date.month:02d}/{date.day:02d}/"
 
@@ -153,6 +167,22 @@ def scrape_multiple_websites(urls, keywords):
                 full_pdf_url = base_boe_url + pdf_url if pdf_url.startswith("/") else pdf_url
                 scraped_data.append({"url": url, "pdf_url": full_pdf_url})
             
+            if "sede.asturias.es" in url:
+                try:
+                    WebDriverWait(driver, 10).until(
+                        EC.presence_of_all_elements_located((By.CSS_SELECTOR, "span.pdfResultadoBopa a"))
+                    )
+                    pdf_links = driver.find_elements(By.CSS_SELECTOR, "span.pdfResultadoBopa a")
+                    for link in pdf_links:
+                        href = link.get_attribute("href")
+                        if href.endswith(".pdf"):
+                            scraped_data.append({
+                                "url": url,
+                                "pdf_url": href
+                            })
+                except Exception as e:
+                    print(f"⚠️ Error extrayendo PDFs del BOPA: {e}")
+            
             if "dogc.gencat.cat" in url:
                 WebDriverWait(driver, 10).until(
                     EC.visibility_of_element_located((By.CSS_SELECTOR, "div.download a"))
@@ -171,12 +201,12 @@ def scrape_multiple_websites(urls, keywords):
                         })
                     except Exception:
                         pass
-            if "sede.asturias.es" in url:
+            if "bocm.es" in url:
                 try:
                     WebDriverWait(driver, 10).until(
-                        EC.presence_of_all_elements_located((By.CSS_SELECTOR, "span.pdfResultadoBopa a"))
+                        EC.presence_of_all_elements_located((By.CSS_SELECTOR, "span.file a"))
                     )
-                    pdf_links = driver.find_elements(By.CSS_SELECTOR, "span.pdfResultadoBopa a")
+                    pdf_links = driver.find_elements(By.CSS_SELECTOR, "span.file a")
                     for link in pdf_links:
                         href = link.get_attribute("href")
                         if href.endswith(".pdf"):
@@ -185,10 +215,10 @@ def scrape_multiple_websites(urls, keywords):
                                 "pdf_url": href
                             })
                 except Exception as e:
-                    print(f"⚠️ Error extrayendo PDFs del BOPA: {e}")
-                continue
+                    print(f"⚠️ Error extrayendo PDFs del BOCM: {e}")
 
-            if "dogv.gva.es" in url or "bocm.es" in url:
+
+            if "dogv.gva.es" in url:
                 iframes = driver.find_elements(By.TAG_NAME, "iframe")
                 if iframes:
                     print(f"🔄 Se encontraron {len(iframes)} iframes en {url}. Cambiando al primero.")
