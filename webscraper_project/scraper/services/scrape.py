@@ -209,7 +209,7 @@ def scrape_multiple_websites(urls, keywords):
                     pdf_links = driver.find_elements(By.CSS_SELECTOR, "span.file a")
                     for link in pdf_links:
                         href = link.get_attribute("href")
-                        if href.endswith(".pdf"):
+                        if href.lower().endswith(".pdf"):
                             scraped_data.append({
                                 "url": url,
                                 "pdf_url": href
