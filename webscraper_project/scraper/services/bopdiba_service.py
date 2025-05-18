@@ -12,13 +12,19 @@ def scrape_bopdiba(driver, url):
         main_links = driver.find_elements(By.CSS_SELECTOR, "a.stretched-link.text-reset.text-decoration-none")
         for main_link in main_links:
             sub_url = main_link.get_attribute("href")
-            title = main_link.text.strip()
             driver.get(sub_url)
             pdf_url = None
+            title = None
             try:
                 WebDriverWait(driver, 10).until(
                     EC.visibility_of_element_located((By.CSS_SELECTOR, "li.list-group-item.bg-transparent a"))
                 )
+                # Extraer el título del h1 de la subpágina
+                try:
+                    h1 = driver.find_element(By.CSS_SELECTOR, "h1.mb-5.font-weight-light")
+                    title = h1.text.strip()
+                except Exception:
+                    title = None
                 pdf_links = driver.find_elements(By.CSS_SELECTOR, "li.list-group-item.bg-transparent a")
                 for pdf_link in pdf_links:
                     pdf_href = pdf_link.get_attribute("href")
@@ -31,7 +37,7 @@ def scrape_bopdiba(driver, url):
                 driver.back()
             results.append({
                 "url_base": url,
-                "title": title,
+                "title": title,  # Título del h1 de la subpágina
                 "link": sub_url,
                 "pdf_url": pdf_url
             })
