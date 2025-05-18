@@ -12,14 +12,14 @@ from scraper.services.dogc_service import scrape_dogc
 from scraper.services.dogv_service import scrape_dogv
 from scraper.services.bocm_service import scrape_bocm
 from scraper.services.bopdiba_service import scrape_bopdiba
-from scraper.services.holidays import get_previous_business_day, get_holidays, get_previous_boe_business_day
+from scraper.services.holidays import get_previous_business_day, get_holidays, get_previous_saturday_business_day
 
 from datetime import datetime
 
 def get_bocm_url():
     base_bocm_number = 116
     base_date = datetime(2025, 5, 16)
-    today = get_previous_business_day(datetime.today(), "madrid")
+    today = get_previous_saturday_business_day(datetime.today(), "madrid")
     days_difference = 0
     date = base_date
     while date < today:
@@ -69,7 +69,7 @@ def get_boe_url():
     if today.weekday() <= 5 and (today.month, today.day) not in holidays:  # Lunes a sábado
         date = today
     else:
-        date = get_previous_boe_business_day(today, "spain")
+        date = get_previous_saturday_business_day(today, "spain")
     return f"https://www.boe.es/boe/dias/{date.year}/{date.month:02d}/{date.day:02d}/"
 
 def scrape_multiple_websites(urls, keywords):
@@ -98,7 +98,7 @@ def scrape_multiple_websites(urls, keywords):
                 scraped_data.extend(scrape_dogv(driver, url, keywords))
                 continue
             if "bocm.es" in url:
-                scraped_data.extend(scrape_bocm(driver, url))
+                scraped_data.extend(scrape_bocm(driver, url,keywords))
                 continue
             if "bop.diba.cat" in url:
                 scraped_data.extend(scrape_bopdiba(driver, url))

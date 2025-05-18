@@ -54,7 +54,7 @@ def get_previous_business_day(date, region):
         date -= timedelta(days=1)
     return date
 
-def get_previous_boe_business_day(date, region):
+def get_previous_saturday_business_day(date, region):
     holidays = get_holidays(date.year, region)
     while date.weekday() == 6 or (date.month, date.day) in holidays: 
         date -= timedelta(days=1)
