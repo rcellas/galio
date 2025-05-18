@@ -89,7 +89,7 @@ def scrape_multiple_websites(urls, keywords):
             time.sleep(5)
 
             if "boe.es" in url:
-                scraped_data.extend(scrape_boe(driver, url))
+                scraped_data.extend(scrape_boe(driver, url, keywords))
                 continue
             if "dogc.gencat.cat" in url:
                 scraped_data.extend(scrape_dogc(driver, url))
