@@ -17,7 +17,7 @@ from scraper.services.holidays import get_previous_business_day, get_holidays, g
 from datetime import datetime
 
 def get_bocm_url():
-    base_bocm_number = 116  
+    base_bocm_number = 116
     base_date = datetime(2025, 5, 16)
     today = get_previous_business_day(datetime.today(), "madrid")
     days_difference = 0
@@ -35,7 +35,7 @@ def get_bocm_url():
     ]
 
 def get_dogc_url():
-    base_dogc_number = 9414 
+    base_dogc_number = 9414
     base_date = datetime(2025, 5, 16)
     today = datetime.today()
     holidays = get_holidays(today.year, "catalonia")
@@ -95,7 +95,7 @@ def scrape_multiple_websites(urls, keywords):
                 scraped_data.extend(scrape_dogc(driver, url))
                 continue
             if "dogv.gva.es" in url:
-                scraped_data.extend(scrape_dogv(driver, url))
+                scraped_data.extend(scrape_dogv(driver, url, keywords))
                 continue
             if "bocm.es" in url:
                 scraped_data.extend(scrape_bocm(driver, url))
