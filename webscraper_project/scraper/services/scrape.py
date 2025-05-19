@@ -14,6 +14,7 @@ from scraper.services.dogc_service import scrape_dogc
 from scraper.services.dogv_service import scrape_dogv
 from scraper.services.bocm_service import scrape_bocm
 from scraper.services.bopdiba_service import scrape_bopdiba
+from scraper.services.bopa_service import scrape_bopa
 from scraper.services.holidays import get_previous_business_day, get_holidays, get_previous_saturday_business_day
 
 from datetime import datetime
@@ -94,16 +95,19 @@ def scrape_multiple_websites(urls, keywords):
                 scraped_data.extend(scrape_boe(driver, url, keywords))
                 continue
             if "dogc.gencat.cat" in url:
-                scraped_data.extend(scrape_dogc(driver, url))
+                scraped_data.extend(scrape_dogc(driver, url, keywords))
                 continue
             if "dogv.gva.es" in url:
                 scraped_data.extend(scrape_dogv(driver, url, keywords))
+                continue
+            if "sede.asturias.es" in url:
+                scraped_data.extend(scrape_bopa(driver, url, keywords))
                 continue
             if "bocm.es" in url:
                 scraped_data.extend(scrape_bocm(driver, url,keywords))
                 continue
             if "bop.diba.cat" in url:
-                scraped_data.extend(scrape_bopdiba(driver, url))
+                scraped_data.extend(scrape_bopdiba(driver, url, keywords))
                 continue
 
             class_mapping = {

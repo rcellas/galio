@@ -3,7 +3,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from urllib.parse import urljoin
 
-def scrape_bopdiba(driver, url):
+def scrape_bopdiba(driver, url, keywords):
     results = []
     try:
         WebDriverWait(driver, 10).until(
@@ -34,12 +34,14 @@ def scrape_bopdiba(driver, url):
                 print(f"⚠️ No se pudo extraer PDF en la subpágina {sub_url}: {e}")
             finally:
                 driver.back()
-            results.append({
-                "url_base": url,
-                "title": title, 
-                "link": sub_url,
-                "pdf_url": pdf_url
-            })
+            # Filtrado por keywords en el título
+            if title and any(keyword.lower() in title.lower() for keyword in keywords):
+                results.append({
+                    "url_base": url,
+                    "title": title, 
+                    "link": sub_url,
+                    "pdf_url": pdf_url
+                })
     except Exception as e:
         print(f"⚠️ Error extrayendo PDFs del BOP DIBA: {e}")
     return results
