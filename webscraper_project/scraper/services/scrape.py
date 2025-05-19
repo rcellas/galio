@@ -6,6 +6,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 from datetime import datetime, timedelta
+from scraper.models import ScrapedItem
+
 
 from scraper.services.boe_service import scrape_boe
 from scraper.services.dogc_service import scrape_dogc
@@ -24,9 +26,9 @@ def get_bocm_url():
     date = base_date
     while date < today:
         date += timedelta(days=1)
-        if date.weekday() < 5 and (date.month, date.day) not in get_holidays(date.year, "madrid"):
+        if date.weekday() < 6 and (date.month, date.day) not in get_holidays(date.year, "madrid"):
             days_difference += 1
-    num_bocm = base_bocm_number + days_difference
+    num_bocm = base_bocm_number + days_difference - 1  # Ajuste aquí
     formatted_date = today.strftime('%Y%m%d')
     base_url = f"https://www.bocm.es/boletin-completo/bocm-{formatted_date}/{num_bocm}/"
     return [
@@ -39,16 +41,16 @@ def get_dogc_url():
     base_date = datetime(2025, 5, 16)
     today = datetime.today()
     holidays = get_holidays(today.year, "catalonia")
-    if today.weekday() >= 5 or (today.month, today.day) in holidays:
-        while today.weekday() >= 5 or (today.month, today.day) in holidays:
-            today -= timedelta(days=1)
+  
+    while today.weekday() >= 5 or (today.month, today.day) in holidays:
+        today -= timedelta(days=1)
     days_difference = 0
     date = base_date
     while date < today:
         date += timedelta(days=1)
         if date.weekday() < 5 and (date.month, date.day) not in get_holidays(date.year, "catalonia"):
             days_difference += 1
-    num_dogc = base_dogc_number + days_difference
+    num_dogc = base_dogc_number + days_difference - 1  # Ajuste aquí
     return f"https://dogc.gencat.cat/es/sumari-del-dogc/?numDOGC={num_dogc}"
 
 def get_bopdiba_url():
@@ -104,7 +106,6 @@ def scrape_multiple_websites(urls, keywords):
                 scraped_data.extend(scrape_bopdiba(driver, url))
                 continue
 
-            # Bloque genérico para otros boletines
             class_mapping = {
                 "boe.es": "sumario",
                 "dogc.gencat.cat": "llistat_destacat_text_cont",
@@ -131,9 +132,8 @@ def scrape_multiple_websites(urls, keywords):
                     for keyword in keywords:
                         if keyword.lower() in text.lower():
                             scraped_data.append({
-                                "url": url,
-                                "keyword": keyword,
-                                "text": text,
+                                "url_base": url,
+                                "title": text,
                                 "link": href,
                                 "pdf_url": pdf_url
                             })
@@ -146,7 +146,6 @@ def scrape_multiple_websites(urls, keywords):
     print("✅ Scraped Data:", scraped_data)
     return scraped_data
 
-# --- Ejemplo de uso ---
 urls = [
     "https://dogv.gva.es/es/inici",
     get_boe_url(),
@@ -155,6 +154,21 @@ urls = [
     *get_bocm_url(),
     get_bopdiba_url()
 ]
+
 keywords = ["subvención", "subvenciones", "subvenció", "licitació", "licitación", "contrato", "contracte", "contractació", "contratos"]
 
 scraped_data = scrape_multiple_websites(urls, keywords)
+
+# cada vez que se ejecute el script, se guardan los datos en la base de datos
+for item in scraped_data:
+    if item.get("url"):
+        try:
+            obj = ScrapedItem.objects.create(
+                url_base=item.get("url_base"),
+                title=item.get("title"),
+                link=item.get("link"),
+                pdf_url=item.get("pdf_url")
+            )
+            print("Guardado:", obj)
+        except Exception as e:
+            print("❌ Error guardando:", e)
