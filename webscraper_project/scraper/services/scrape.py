@@ -26,9 +26,9 @@ def get_bocm_url():
     date = base_date
     while date < today:
         date += timedelta(days=1)
-        if date.weekday() <= 5 and (date.month, date.day) not in get_holidays(date.year, "madrid"):
+        if date.weekday() < 6 and (date.month, date.day) not in get_holidays(date.year, "madrid"):
             days_difference += 1
-    num_bocm = base_bocm_number + days_difference
+    num_bocm = base_bocm_number + days_difference - 1  # Ajuste aquí
     formatted_date = today.strftime('%Y%m%d')
     base_url = f"https://www.bocm.es/boletin-completo/bocm-{formatted_date}/{num_bocm}/"
     return [
@@ -41,16 +41,16 @@ def get_dogc_url():
     base_date = datetime(2025, 5, 16)
     today = datetime.today()
     holidays = get_holidays(today.year, "catalonia")
-    if today.weekday() > 5 or (today.month, today.day) in holidays:
-        while today.weekday() >= 5 or (today.month, today.day) in holidays:
-            today -= timedelta(days=1)
+  
+    while today.weekday() >= 5 or (today.month, today.day) in holidays:
+        today -= timedelta(days=1)
     days_difference = 0
     date = base_date
     while date < today:
         date += timedelta(days=1)
         if date.weekday() < 5 and (date.month, date.day) not in get_holidays(date.year, "catalonia"):
             days_difference += 1
-    num_dogc = base_dogc_number + days_difference
+    num_dogc = base_dogc_number + days_difference - 1  # Ajuste aquí
     return f"https://dogc.gencat.cat/es/sumari-del-dogc/?numDOGC={num_dogc}"
 
 def get_bopdiba_url():
