@@ -132,9 +132,8 @@ def scrape_multiple_websites(urls, keywords):
                     for keyword in keywords:
                         if keyword.lower() in text.lower():
                             scraped_data.append({
-                                "url": url,
-                                "keyword": keyword,
-                                "text": text,
+                                "url_base": url,
+                                "title": text,
                                 "link": href,
                                 "pdf_url": pdf_url
                             })
@@ -155,6 +154,21 @@ urls = [
     *get_bocm_url(),
     get_bopdiba_url()
 ]
+
 keywords = ["subvención", "subvenciones", "subvenció", "licitació", "licitación", "contrato", "contracte", "contractació", "contratos"]
 
 scraped_data = scrape_multiple_websites(urls, keywords)
+
+# cada vez que se ejecute el script, se guardan los datos en la base de datos
+for item in scraped_data:
+    if item.get("url"):
+        try:
+            obj = ScrapedItem.objects.create(
+                url_base=item.get("url_base"),
+                title=item.get("title"),
+                link=item.get("link"),
+                pdf_url=item.get("pdf_url")
+            )
+            print("Guardado:", obj)
+        except Exception as e:
+            print("❌ Error guardando:", e)

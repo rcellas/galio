@@ -9,16 +9,14 @@ class Command(BaseCommand):
         scraped_data = scrape_multiple_websites(urls, keywords)
         print("Scraped data:", scraped_data)
         for item in scraped_data:
-            if item.get("url"):
-                try:
-                    obj = ScrapedItem.objects.create(
-                        url=item.get("url"),
-                        keyword=item.get("keyword"),
-                        text=item.get("text"),
-                        link=item.get("link"),
-                        pdf_url=item.get("pdf_url")
-                    )
-                    print("Guardado:", obj)
-                except Exception as e:
-                    print("❌ Error guardando:", e)
+            try:
+                obj = ScrapedItem.objects.create(
+                    url_base=item.get("url_base"),
+                    title=item.get("title"),
+                    link=item.get("link"),
+                    pdf_url=item.get("pdf_url")
+                )
+                print("✅ Guardado:", obj)
+            except Exception as e:
+                print("❌ Error guardando:", e)
         self.stdout.write(self.style.SUCCESS('Scraping completado y datos guardados.'))
