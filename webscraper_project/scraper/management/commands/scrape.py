@@ -1,27 +1,22 @@
 from django.core.management.base import BaseCommand
-from scraper.services.scrape import scrape_multiple_websites
-from scraper.models import ScrapedData
+from scraper.services.scrape import scrape_multiple_websites, urls, keywords
+from scraper.models import ScrapedItem
 
 class Command(BaseCommand):
-    help = "Run the web scraper"
+    help = 'Ejecuta el scraping y guarda los resultados en la base de datos'
 
     def handle(self, *args, **kwargs):
-        # Definir URLs y palabras clave
-        urls = ["https://dogv.gva.es/es/inici"]
-        keywords = ["subvención", "licitación", "licitació", "contratació", "contractación", "contractaciones"]
-
-        # Ejecutar scraping
-        data = scrape_multiple_websites(urls, keywords)
-        print("Scraped Data:", data)  # Depuración
-
-        # Guardar en la base de datos
-        for item in data:
-            if "url" in item and "title" in item:
-                ScrapedData.objects.create(
-                    url=item["url"],
-                    title=item["title"]
+        scraped_data = scrape_multiple_websites(urls, keywords)
+        print("Scraped data:", scraped_data)
+        for item in scraped_data:
+            try:
+                obj = ScrapedItem.objects.create(
+                    url_base=item.get("url_base"),
+                    title=item.get("title"),
+                    link=item.get("link"),
+                    pdf_url=item.get("pdf_url")
                 )
-            else:
-                print(f"Ignorando item incompleto: {item}")
-
-        self.stdout.write(self.style.SUCCESS("Scraping completed!"))
+                print("✅ Guardado:", obj)
+            except Exception as e:
+                print("❌ Error guardando:", e)
+        self.stdout.write(self.style.SUCCESS('Scraping completado y datos guardados.'))
