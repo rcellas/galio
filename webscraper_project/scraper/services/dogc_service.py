@@ -3,7 +3,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from urllib.parse import urljoin
 
-def scrape_dogc(driver, url):
+def scrape_dogc(driver, url, keywords):
     results = []
     try:
         WebDriverWait(driver, 10).until(
@@ -18,12 +18,14 @@ def scrape_dogc(driver, url):
 
                 pdf_elem = item.find_element(By.CSS_SELECTOR, "div.download a")
                 pdf_url = pdf_elem.get_attribute("href")
-                results.append({
-                    "url_base": url,
-                    "title": title,
-                    "link": link,
-                    "pdf_url": pdf_url
-                })
+                
+                if any(keyword.lower() in title.lower() for keyword in keywords):
+                    results.append({
+                        "url_base": url,
+                        "title": title,
+                        "link": link,
+                        "pdf_url": pdf_url
+                    })
             except Exception:
                 pass
     except Exception as e:
