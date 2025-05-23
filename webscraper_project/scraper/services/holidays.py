@@ -36,7 +36,7 @@ def get_catalonia_holidays(year):
 def get_madrid_holidays(year):
     spain = get_spain_holidays(year)
     maundy_thursday, _, _ = get_easter_dates(year)
-    return spain | {(maundy_thursday.month, maundy_thursday.day), (5, 2), (7, 25)}
+    return spain | {(maundy_thursday.month, maundy_thursday.day), (5, 2),(7, 25)}
 
 def get_holidays(year, region):
     if region == "madrid":
