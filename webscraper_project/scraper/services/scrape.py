@@ -20,8 +20,8 @@ from scraper.services.holidays import get_previous_business_day, get_holidays, g
 from datetime import datetime
 
 def get_bocm_url():
-    base_bocm_number = 116
-    base_date = datetime(2025, 5, 16)
+    base_bocm_number = 121
+    base_date = datetime(2025, 5, 22)
     today = get_previous_saturday_business_day(datetime.today(), "madrid")
     days_difference = 0
     date = base_date
@@ -53,18 +53,6 @@ def get_dogc_url():
             days_difference += 1
     num_dogc = base_dogc_number + days_difference - 1  # Ajuste aquí
     return f"https://dogc.gencat.cat/es/sumari-del-dogc/?numDOGC={num_dogc}"
-
-def get_bopdiba_url():
-    base_bopdiba_number = 221
-    date = get_previous_business_day(datetime.today(), "catalonia")
-    days_difference = 0
-    base_date = datetime(2025, 5, 16)
-    while base_date < date:
-        base_date += timedelta(days=1)
-        if base_date.weekday() < 5 and (base_date.month, base_date.day) not in get_holidays(base_date.year, "catalonia"):
-            days_difference += 1
-    num_bopdiba = base_bopdiba_number + days_difference
-    return f"https://bop.diba.cat/butlleti-del-dia?bopb_dia%5BtipologiaAnunciant%5D={num_bopdiba}"
 
 def get_boe_url():
     today = datetime.today()
@@ -156,14 +144,14 @@ urls = [
     get_dogc_url(),
     "https://sede.asturias.es/ultimos-boletines?p_r_p_summaryLastBopa=true",
     *get_bocm_url(),
-    get_bopdiba_url()
+    # get_bopdiba_url()
+    "https://bop.diba.cat/butlleti-del-dia?bopb_dia%5BtipologiaAnunciant%5D=221"
 ]
 
 keywords = ["subvención", "subvenciones", "subvenció", "licitació", "licitación", "contrato", "contracte", "contractació", "contratos"]
 
 scraped_data = scrape_multiple_websites(urls, keywords)
 
-# cada vez que se ejecute el script, se guardan los datos en la base de datos
 for item in scraped_data:
     if item.get("url"):
         try:

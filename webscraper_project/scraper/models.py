@@ -1,6 +1,7 @@
 from django.db import models
 
 class ScrapedItem(models.Model):
+    id = models.AutoField(primary_key=True)
     url_base = models.URLField()
     title = models.TextField()
     link = models.URLField(null=True, blank=True)
