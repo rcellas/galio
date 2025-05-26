@@ -40,7 +40,9 @@ def scrape_bopdiba(driver, url, keywords):
                     "url_base": url,
                     "title": title, 
                     "link": sub_url,
-                    "pdf_url": pdf_url
+                    "pdf_url": pdf_url,
+                    "region": "Cataluña",
+                    "organism": "BOP DIBA"
                 })
     except Exception as e:
         print(f"⚠️ Error extrayendo PDFs del BOP DIBA: {e}")

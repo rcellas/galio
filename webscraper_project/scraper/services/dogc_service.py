@@ -24,7 +24,9 @@ def scrape_dogc(driver, url, keywords):
                         "url_base": url,
                         "title": title,
                         "link": link,
-                        "pdf_url": pdf_url
+                        "pdf_url": pdf_url,
+                        "region": "Cataluña",
+                        "organism": "DOGC"
                     })
             except Exception:
                 pass

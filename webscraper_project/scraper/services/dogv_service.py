@@ -26,7 +26,9 @@ def scrape_dogv(driver, url, keywords):
                                     "url_base": url,
                                     "title": text,
                                     "link": None,
-                                    "pdf_url": None
+                                    "pdf_url": None,
+                                    "region": "Comunidad Valenciana",  # Región fija para DOGV
+                                    "organism": "DOGV"  # Organismo fijo para DOGV
                                 })
             except Exception:
                 pass

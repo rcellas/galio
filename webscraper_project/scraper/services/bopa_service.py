@@ -27,7 +27,9 @@ def scrape_bopa(driver, url, keywords):
                                         "url_base": url,
                                         "title": text,
                                         "link": href,
-                                        "pdf_url": href
+                                        "pdf_url": href,
+                                        "region": "Asturias",  # Región fija para BOPA
+                                        "organism": "BOPA"  # Organismo fijo para BOPA
                                     })
                                     break
             except Exception as e:

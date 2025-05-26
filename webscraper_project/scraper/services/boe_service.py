@@ -24,7 +24,9 @@ def scrape_boe(driver, url, keywords):
                         "url_base": url,
                         "title": title,
                         "link": url,
-                        "pdf_url": full_pdf_url
+                        "pdf_url": full_pdf_url,
+                        "region": "Nacional",  
+                        "organism": "BOE"
                     })
             except Exception as e:
                 print(f"⚠️ Error en item BOE: {e}")
