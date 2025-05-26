@@ -29,7 +29,7 @@ def get_bocm_url():
         date += timedelta(days=1)
         if date.weekday() < 6 and (date.month, date.day) not in get_holidays(date.year, "madrid"):
             days_difference += 1
-    num_bocm = base_bocm_number + days_difference - 1  # Ajuste aquí
+    num_bocm = base_bocm_number + days_difference - 1 
     formatted_date = today.strftime('%Y%m%d')
     base_url = f"https://www.bocm.es/boletin-completo/bocm-{formatted_date}/{num_bocm}/"
     return [
