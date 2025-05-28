@@ -12,7 +12,7 @@ def scraped_items(request):
     if region:
         filters &= Q(region=region)
     if organism:
-        filters &= Q(organism=organism)  # Cambiado de 'organismo' a 'organism'
+        filters &= Q(organism=organism)
     if start_date:
         filters &= Q(created_at__gte=start_date)
     if end_date:
