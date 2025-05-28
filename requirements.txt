@@ -24,5 +24,4 @@ wsproto==1.2.0
 PyPDF2
 gunicorn
 django-cors-headers
-corsheaders
 
