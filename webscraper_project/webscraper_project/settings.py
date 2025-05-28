@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-mxnzev*=4h%vg3xfgs7#w+fh555v3hx74b65@%xz**fiam+mb9
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['galio.onrender.com', 'localhost', '127.0.0.1']
 
 
 # Application definition
