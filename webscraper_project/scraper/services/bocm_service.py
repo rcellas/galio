@@ -21,7 +21,9 @@ def scrape_bocm(driver, url, keywords):
                     "url_base": url,
                     "title": title,
                     "link": href,
-                    "pdf_url": href
+                    "pdf_url": href,
+                    "region": "Madrid",  
+                    "organism": "BOCM" 
                 })
     except Exception as e:
         print(f"⚠️ Error extrayendo PDFs del BOCM: {e}")

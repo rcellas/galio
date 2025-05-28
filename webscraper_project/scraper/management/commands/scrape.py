@@ -11,10 +11,12 @@ class Command(BaseCommand):
         for item in scraped_data:
             try:
                 obj = ScrapedItem.objects.create(
-                    url_base=item.get("url_base"),
-                    title=item.get("title"),
-                    link=item.get("link"),
-                    pdf_url=item.get("pdf_url")
+                    url_base=item.get("url_base", ""),
+                    title=item.get("title", "No title"),
+                    link=item.get("link", None),
+                    pdf_url=item.get("pdf_url", None),
+                    region=item.get("region", "Nacional"),
+                    organism=item.get("organism", "BOE")
                 )
                 print("✅ Guardado:", obj)
             except Exception as e:
