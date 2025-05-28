@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Start cron in the background
 cron &
 
