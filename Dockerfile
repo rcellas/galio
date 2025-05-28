@@ -39,27 +39,27 @@ RUN apt-get update && apt-get install -y \
     libpci3 \
     && rm -rf /var/lib/apt/lists/*
 
-    # Instalar cron y herramientas adicionales
+# Install cron and additional tools
 RUN apt-get update && apt-get install -y \
-cron \
-vim \
-&& rm -rf /var/lib/apt/lists/*
+    cron \
+    vim \
+    && rm -rf /var/lib/apt/lists/*
 
-# Crear directorios necesarios y asignar permisos para cron
+# Create necessary directories and set cron permissions
 RUN mkdir -p /var/run /var/log && \
-chmod 0755 /var/run /var/log && \
-touch /var/run/crond.pid && \
-chmod 0644 /var/run/crond.pid && \
-touch /var/log/cron.log && \
-chmod 0644 /var/log/cron.log
+    chmod 0755 /var/run /var/log && \
+    touch /var/run/crond.pid && \
+    chmod 0644 /var/run/crond.pid && \
+    touch /var/log/cron.log && \
+    chmod 0644 /var/log/cron.log
 
-# Copia el archivo local cronfile (que contiene las reglas de cron) al directorio /etc/cron.d/ con el nombre scrape-cron.
+# Copy the local cronfile to /etc/cron.d/ with the name scrape-cron
 COPY cronfile /etc/cron.d/scrape-cron
 
-# Dar permisos adecuados al cronfile
+# Set appropriate permissions for the cronfile
 RUN chmod 0644 /etc/cron.d/scrape-cron
 
-# Registrar el cronjob
+# Register the cronjob
 RUN crontab /etc/cron.d/scrape-cron
 
 # Configure Fontconfig to avoid cache errors
@@ -93,11 +93,15 @@ RUN mkdir -p /app/webscraper_project && \
 # Copy application source code
 COPY . .
 
+# Copy entrypoint script
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
 # Switch to non-privileged user
 #USER appuser
 
 # Expose the port used by the application
 EXPOSE 8000
 
-# Default command to keep the container running
-CMD ["cron", "-f"]
+# Start both cron and gunicorn
+CMD ["/app/entrypoint.sh"]
