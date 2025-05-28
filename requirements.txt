@@ -23,4 +23,6 @@ websocket-client==1.8.0
 wsproto==1.2.0
 PyPDF2
 gunicorn
+django-cors-headers
+corsheaders
 
