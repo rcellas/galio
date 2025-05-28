@@ -159,7 +159,9 @@ for item in scraped_data:
                 url_base=item.get("url_base"),
                 title=item.get("title"),
                 link=item.get("link"),
-                pdf_url=item.get("pdf_url")
+                pdf_url=item.get("pdf_url"),
+                region=result["region"] if "region" in item else "Nacional",
+                organism=result["organism"]
             )
             print("Guardado:", obj)
         except Exception as e:
