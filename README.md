@@ -308,3 +308,4 @@ Wiki pages you might want to explore:
 - [System Architecture (rcellas/galio)](/wiki/rcellas/galio#2)
 - [Regional Scrapers (rcellas/galio)](/wiki/rcellas/galio#3.2)
 - [Docker Configuration (rcellas/galio)](/wiki/rcellas/galio#4.2)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/rcellas/galio)
