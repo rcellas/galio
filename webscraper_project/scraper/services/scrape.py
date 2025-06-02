@@ -9,8 +9,8 @@ import os
 from datetime import datetime, timedelta
 from scraper.models import ScrapedItem
 
-# from scraper.services.boe_service import scrape_boe
-from scraper.services.dogc_service import scrape_dogc
+from scraper.services.boe_service import scrape_boe
+# from scraper.services.dogc_service import scrape_dogc
 # from scraper.services.dogv_service import scrape_dogv
 # from scraper.services.bocm_service import scrape_bocm
 # from scraper.services.bopdiba_service import scrape_bopdiba
@@ -35,38 +35,38 @@ from scraper.services.holidays import get_previous_business_day, get_holidays, g
 #         base_url + "i.-comunidad-de-madrid/d%29-anuncios"
 #     ]
 
-def get_dogc_url():
-    base_dogc_number = 9414
-    base_date = datetime(2025, 5, 16)
-    today = datetime.today()
-    holidays = get_holidays(today.year, "catalonia")
-  
-    while today.weekday() >= 5 or (today.month, today.day) in holidays:
-        today -= timedelta(days=1)
-    days_difference = 0
-    date = base_date
-    while date < today:
-        date += timedelta(days=1)
-        if date.weekday() < 5 and (date.month, date.day) not in get_holidays(date.year, "catalonia"):
-            days_difference += 1
-    num_dogc = base_dogc_number + days_difference - 1
-    return f"https://dogc.gencat.cat/es/sumari-del-dogc/?numDOGC={num_dogc}"
-
-# def get_boe_url():
+# def get_dogc_url():
+#     base_dogc_number = 9414
+#     base_date = datetime(2025, 5, 16)
 #     today = datetime.today()
-#     holidays = get_holidays(today.year, "spain")
-#     if today.weekday() <= 5 and (today.month, today.day) not in holidays:
-#         date = today
-#     else:
-#         date = get_previous_saturday_business_day(today, "spain")
-#     return f"https://www.boe.es/boe/dias/{date.year}/{date.month:02d}/{date.day:02d}/"
+#     holidays = get_holidays(today.year, "catalonia")
+  
+#     while today.weekday() >= 5 or (today.month, today.day) in holidays:
+#         today -= timedelta(days=1)
+#     days_difference = 0
+#     date = base_date
+#     while date < today:
+#         date += timedelta(days=1)
+#         if date.weekday() < 5 and (date.month, date.day) not in get_holidays(date.year, "catalonia"):
+#             days_difference += 1
+#     num_dogc = base_dogc_number + days_difference - 1
+#     return f"https://dogc.gencat.cat/es/sumari-del-dogc/?numDOGC={num_dogc}"
+
+def get_boe_url():
+    today = datetime.today()
+    holidays = get_holidays(today.year, "spain")
+    if today.weekday() <= 5 and (today.month, today.day) not in holidays:
+        date = today
+    else:
+        date = get_previous_saturday_business_day(today, "spain")
+    return f"https://www.boe.es/boe/dias/{date.year}/{date.month:02d}/{date.day:02d}/"
 
 def get_urls():
-    """Función para obtener solo la URL de DOGC"""
+    """Función para obtener solo la URL de BOE"""
     return [
         # "https://dogv.gva.es/es/inici",
-        # get_boe_url(),
-        get_dogc_url(),
+        get_boe_url(),
+        # get_dogc_url(),
         # "https://sede.asturias.es/ultimos-boletines?p_r_p_summaryLastBopa=true",
         # *get_bocm_url(),
         # "https://bop.diba.cat/butlleti-del-dia?bopb_dia%5BtipologiaAnunciant%5D=221"
@@ -112,12 +112,12 @@ def scrape_multiple_websites(urls, keywords):
                 WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
                 time.sleep(3)
 
-                # if "boe.es" in url:
-                #     scraped_data.extend(scrape_boe(driver, url, keywords))
-                #     continue
-                if "dogc.gencat.cat" in url:
-                    scraped_data.extend(scrape_dogc(driver, url, keywords))
+                if "boe.es" in url:
+                    scraped_data.extend(scrape_boe(driver, url, keywords))
                     continue
+                # if "dogc.gencat.cat" in url:
+                #     scraped_data.extend(scrape_dogc(driver, url, keywords))
+                #     continue
                 # if "dogv.gva.es" in url:
                 #     scraped_data.extend(scrape_dogv(driver, url, keywords))
                 #     continue
@@ -157,8 +157,8 @@ def save_scraped_data(scraped_data):
                 title=item.get("title"),
                 link=item.get("link"),
                 pdf_url=item.get("pdf_url"),
-                region="Cataluña",
-                organism="DOGC"
+                region="Nacional",
+                organism="BOE"
             )
             print("Guardado:", obj)
         except Exception as e:
