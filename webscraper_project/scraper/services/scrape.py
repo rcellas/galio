@@ -80,72 +80,100 @@ def scrape_multiple_websites(urls, keywords):
     options.add_argument('--headless')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
+    options.add_argument('--disable-gpu')
+    options.add_argument('--disable-web-security')
+    options.add_argument('--disable-features=VizDisplayCompositor')
+    options.add_argument('--disable-extensions')
+    options.add_argument('--disable-plugins')
+    options.add_argument('--disable-images')
+    options.add_argument('--window-size=1920,1080')
+    options.add_argument('--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36')
+    
+    options.set_preference('dom.ipc.plugins.enabled.libflashplayer.so', False)
+    options.set_preference('media.volume_scale', '0.0')
+    
     service = Service("/usr/local/bin/geckodriver")
-    driver = webdriver.Firefox(service=service, options=options)
+    
+    try:
+        driver = webdriver.Firefox(service=service, options=options)
+        driver.set_page_load_timeout(30)
+        driver.implicitly_wait(10)
+    except Exception as e:
+        print(f"❌ Error inicializando Firefox: {e}")
+        return []
+    
     scraped_data = []
 
     try:
         for url in urls:
-            print(f"🔎 Scraping URL: {url}")
-            driver.get(url)
-            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
-            time.sleep(5)
-
-            if "boe.es" in url:
-                scraped_data.extend(scrape_boe(driver, url, keywords))
-                continue
-            if "dogc.gencat.cat" in url:
-                scraped_data.extend(scrape_dogc(driver, url, keywords))
-                continue
-            if "dogv.gva.es" in url:
-                scraped_data.extend(scrape_dogv(driver, url, keywords))
-                continue
-            if "sede.asturias.es" in url:
-                scraped_data.extend(scrape_bopa(driver, url, keywords))
-                continue
-            if "bocm.es" in url:
-                scraped_data.extend(scrape_bocm(driver, url, keywords))
-                continue
-            if "bop.diba.cat" in url:
-                scraped_data.extend(scrape_bopdiba(driver, url, keywords))
-                continue
-
-            class_mapping = {
-                "boe.es": "sumario",
-                "dogc.gencat.cat": "llistat_destacat_text_cont",
-                "bop.diba.cat": "div.col-md-6.col-lg-8.py-5.px-lg-5.bg-light",
-                "dogv.gva.es": "imc--llistat",
-                "bocm.es": "view-grouping"
-            }
-            class_name = next((class_mapping[key] for key in class_mapping if key in url), "section")
             try:
-                WebDriverWait(driver, 10).until(
-                    EC.visibility_of_element_located((By.CLASS_NAME, class_name))
-                )
-                sections = driver.find_elements(By.CLASS_NAME, class_name)
-            except:
-                print(f"⚠️ No se encontró la clase {class_name} en {url}")
-                continue
+                print(f"🔎 Scraping URL: {url}")
+                driver.get(url)
+                WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+                time.sleep(3)
 
-            for section in sections:
-                links = section.find_elements(By.TAG_NAME, "a")
-                for link in links:
-                    text = link.text.strip()
-                    href = link.get_attribute("href")
-                    pdf_url = href if href and href.lower().endswith(".pdf") else None
-                    for keyword in keywords:
-                        if keyword.lower() in text.lower():
-                            scraped_data.append({
-                                "url_base": url,
-                                "title": text,
-                                "link": href,
-                                "pdf_url": pdf_url
-                            })
+                if "boe.es" in url:
+                    scraped_data.extend(scrape_boe(driver, url, keywords))
+                    continue
+                if "dogc.gencat.cat" in url:
+                    scraped_data.extend(scrape_dogc(driver, url, keywords))
+                    continue
+                if "dogv.gva.es" in url:
+                    scraped_data.extend(scrape_dogv(driver, url, keywords))
+                    continue
+                if "sede.asturias.es" in url:
+                    scraped_data.extend(scrape_bopa(driver, url, keywords))
+                    continue
+                if "bocm.es" in url:
+                    scraped_data.extend(scrape_bocm(driver, url, keywords))
+                    continue
+                if "bop.diba.cat" in url:
+                    scraped_data.extend(scrape_bopdiba(driver, url, keywords))
+                    continue
+
+                class_mapping = {
+                    "boe.es": "sumario",
+                    "dogc.gencat.cat": "llistat_destacat_text_cont",
+                    "bop.diba.cat": "div.col-md-6.col-lg-8.py-5.px-lg-5.bg-light",
+                    "dogv.gva.es": "imc--llistat",
+                    "bocm.es": "view-grouping"
+                }
+                class_name = next((class_mapping[key] for key in class_mapping if key in url), "section")
+                try:
+                    WebDriverWait(driver, 10).until(
+                        EC.visibility_of_element_located((By.CLASS_NAME, class_name))
+                    )
+                    sections = driver.find_elements(By.CLASS_NAME, class_name)
+                except:
+                    print(f"⚠️ No se encontró la clase {class_name} en {url}")
+                    continue
+
+                for section in sections:
+                    links = section.find_elements(By.TAG_NAME, "a")
+                    for link in links:
+                        text = link.text.strip()
+                        href = link.get_attribute("href")
+                        pdf_url = href if href and href.lower().endswith(".pdf") else None
+                        for keyword in keywords:
+                            if keyword.lower() in text.lower():
+                                scraped_data.append({
+                                    "url_base": url,
+                                    "title": text,
+                                    "link": href,
+                                    "pdf_url": pdf_url
+                                })
+
+            except Exception as e:
+                print(f"❌ Error scraping {url}: {e}")
+                continue
 
     except Exception as e:
-        print("❌ Error processing URLs:", e)
+        print("❌ Error general:", e)
     finally:
-        driver.quit()
+        try:
+            driver.quit()
+        except:
+            pass
 
     print("✅ Scraped Data:", scraped_data)
     return scraped_data
@@ -193,7 +221,6 @@ def save_scraped_data(scraped_data):
 
 urls = get_urls()
 keywords = get_keywords()
-
 
 if __name__ == "__main__":
     scraped_data = scrape_multiple_websites(urls, keywords)
