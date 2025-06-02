@@ -62,7 +62,7 @@ def get_boe_url():
     return f"https://www.boe.es/boe/dias/{date.year}/{date.month:02d}/{date.day:02d}/"
 
 def get_urls():
-    """Función para obtener las URLs dinámicamente"""
+    """Función para obtener todas las URLs"""
     return [
         "https://dogv.gva.es/es/inici",
         get_boe_url(),
@@ -97,9 +97,7 @@ def scrape_multiple_websites(urls, keywords):
         driver = webdriver.Chrome(service=service, options=options)
         driver.set_page_load_timeout(30)
         driver.implicitly_wait(10)
-        print("✅ Chrome inicializado correctamente")
     except Exception as e:
-        print(f"❌ Error inicializando Chrome: {e}")
         return []
     
     scraped_data = []
@@ -107,7 +105,6 @@ def scrape_multiple_websites(urls, keywords):
     try:
         for url in urls:
             try:
-                print(f"🔎 Scraping URL: {url}")
                 driver.get(url)
                 WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
                 time.sleep(3)
@@ -131,53 +128,18 @@ def scrape_multiple_websites(urls, keywords):
                     scraped_data.extend(scrape_bopdiba(driver, url, keywords))
                     continue
 
-                class_mapping = {
-                    "boe.es": "sumario",
-                    "dogc.gencat.cat": "llistat_destacat_text_cont",
-                    "bop.diba.cat": "div.col-md-6.col-lg-8.py-5.px-lg-5.bg-light",
-                    "dogv.gva.es": "imc--llistat",
-                    "bocm.es": "view-grouping"
-                }
-                class_name = next((class_mapping[key] for key in class_mapping if key in url), "section")
-                try:
-                    WebDriverWait(driver, 10).until(
-                        EC.visibility_of_element_located((By.CLASS_NAME, class_name))
-                    )
-                    sections = driver.find_elements(By.CLASS_NAME, class_name)
-                except:
-                    print(f"⚠️ No se encontró la clase {class_name} en {url}")
-                    continue
-
-                for section in sections:
-                    links = section.find_elements(By.TAG_NAME, "a")
-                    for link in links:
-                        text = link.text.strip()
-                        href = link.get_attribute("href")
-                        pdf_url = href if href and href.lower().endswith(".pdf") else None
-                        for keyword in keywords:
-                            if keyword.lower() in text.lower():
-                                scraped_data.append({
-                                    "url_base": url,
-                                    "title": text,
-                                    "link": href,
-                                    "pdf_url": pdf_url
-                                })
-
             except Exception as e:
-                print(f"❌ Error scraping {url}: {e}")
                 continue
 
     except Exception as e:
-        print("❌ Error general:", e)
+        pass
     finally:
         if driver:
             try:
                 driver.quit()
-                print("🔄 Chrome cerrado correctamente")
             except:
-                print("⚠️ Error cerrando Chrome")
+                pass
 
-    print(f"✅ Scraping completado. {len(scraped_data)} elementos encontrados")
     return scraped_data
 
 def save_scraped_data(scraped_data):
@@ -208,7 +170,7 @@ def save_scraped_data(scraped_data):
                 region = "Nacional"
                 organism = "BOE"
 
-            obj = ScrapedItem.objects.create(
+            ScrapedItem.objects.create(
                 url_base=item.get("url_base"),
                 title=item.get("title"),
                 link=item.get("link"),
@@ -216,15 +178,12 @@ def save_scraped_data(scraped_data):
                 region=region,
                 organism=organism
             )
-            print("Guardado:", obj)
         except Exception as e:
-            print("❌ Error guardando:", e)
+            pass
 
-# Variables disponibles para importar
 urls = get_urls()
 keywords = get_keywords()
 
-# Solo ejecutar si se llama directamente este archivo
 if __name__ == "__main__":
     scraped_data = scrape_multiple_websites(urls, keywords)
     save_scraped_data(scraped_data)
