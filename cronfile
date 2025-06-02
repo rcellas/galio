@@ -1,1 +1,4 @@
-*/5 * * * * /usr/local/bin/python /app/webscraper_project/manage.py scrape >> /var/log/cron.log 2>&1
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+*/5 * * * * cd /app/webscraper_project && /usr/local/bin/python manage.py scrape >> /var/log/cron.log 2>&1

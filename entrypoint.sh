@@ -22,6 +22,22 @@ echo "Cron jobs listed above"
 # Check if cron service is running
 ps aux | grep cron
 
+# Ejecutar scraping inicial para verificar que funciona
+echo "=== Ejecutando scraping inicial ==="
+python manage.py scrape
+echo "=== Scraping inicial completado ==="
+
+# Verificar si se guardaron datos
+echo "=== Verificando datos guardados ==="
+python manage.py shell -c "
+from scraper.models import ScrapedItem
+count = ScrapedItem.objects.count()
+print(f'Total elementos en BD: {count}')
+if count > 0:
+    latest = ScrapedItem.objects.latest('created_at')
+    print(f'Último elemento: {latest.title[:50]}...')
+"
+
 # Start following the cron log in background (for debugging)
 tail -f /var/log/cron.log &
 
