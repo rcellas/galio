@@ -1,5 +1,3 @@
-Sí, puedo generar los diagramas de tal forma que funcionen correctamente dentro del README de GitHub. Los diagramas Mermaid que te proporcioné anteriormente ya están en el formato correcto para GitHub, pero te los voy a optimizar para asegurar que se rendericen perfectamente:
-
 # Galio - Spanish Government Bulletin Web Scraper
 
 Sistema automatizado de scraping para extraer información de subvenciones, licitaciones y contratos de boletines oficiales españoles nacionales y regionales.
@@ -305,8 +303,6 @@ galio/
 ```
 
 ## Notes
-
-Los diagramas están optimizados para GitHub y se renderizarán automáticamente cuando copies y pegues este README. GitHub soporta nativamente Mermaid desde 2022, por lo que no necesitas ninguna configuración adicional.
 
 Wiki pages you might want to explore:
 - [System Architecture (rcellas/galio)](/wiki/rcellas/galio#2)
