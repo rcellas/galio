@@ -1,24 +1,15 @@
 from django.core.management.base import BaseCommand
-from scraper.services.scrape import scrape_multiple_websites, urls, keywords
-from scraper.models import ScrapedItem
+from scraper.services.scrape import scrape_multiple_websites, save_scraped_data, get_urls, get_keywords
 
 class Command(BaseCommand):
     help = 'Ejecuta el scraping y guarda los resultados en la base de datos'
 
     def handle(self, *args, **kwargs):
-        scraped_data = scrape_multiple_websites(urls, keywords)
-        print("Scraped data:", scraped_data)
-        for item in scraped_data:
-            try:
-                obj = ScrapedItem.objects.create(
-                    url_base=item.get("url_base", ""),
-                    title=item.get("title", "No title"),
-                    link=item.get("link", None),
-                    pdf_url=item.get("pdf_url", None),
-                    region=item.get("region", "Nacional"),
-                    organism=item.get("organism", "BOE")
-                )
-                print("✅ Guardado:", obj)
-            except Exception as e:
-                print("❌ Error guardando:", e)
-        self.stdout.write(self.style.SUCCESS('Scraping completado y datos guardados.'))
+        try:
+            urls = get_urls()
+            keywords = get_keywords()
+            scraped_data = scrape_multiple_websites(urls, keywords)
+            save_scraped_data(scraped_data)  
+            self.stdout.write(self.style.SUCCESS('Scraping completado y datos guardados.'))
+        except Exception as e:
+            self.stderr.write(self.style.ERROR(f'❌ Error: {str(e)}'))

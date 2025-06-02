@@ -8,7 +8,6 @@ import time
 from datetime import datetime, timedelta
 from scraper.models import ScrapedItem
 
-
 from scraper.services.boe_service import scrape_boe
 from scraper.services.dogc_service import scrape_dogc
 from scraper.services.dogv_service import scrape_dogv
@@ -16,8 +15,6 @@ from scraper.services.bocm_service import scrape_bocm
 from scraper.services.bopdiba_service import scrape_bopdiba
 from scraper.services.bopa_service import scrape_bopa
 from scraper.services.holidays import get_previous_business_day, get_holidays, get_previous_saturday_business_day
-
-from datetime import datetime
 
 def get_bocm_url():
     base_bocm_number = 121
@@ -29,7 +26,7 @@ def get_bocm_url():
         date += timedelta(days=1)
         if date.weekday() < 7 and (date.month, date.day) not in get_holidays(date.year, "madrid"):
             days_difference += 1
-    num_bocm = base_bocm_number + days_difference - 2  # Cambiado de -1 a -2
+    num_bocm = base_bocm_number + days_difference - 2
     formatted_date = today.strftime('%Y%m%d')
     base_url = f"https://www.bocm.es/boletin-completo/bocm-{formatted_date}/{num_bocm}/"
     return [
@@ -51,17 +48,32 @@ def get_dogc_url():
         date += timedelta(days=1)
         if date.weekday() < 5 and (date.month, date.day) not in get_holidays(date.year, "catalonia"):
             days_difference += 1
-    num_dogc = base_dogc_number + days_difference - 1  # Ajuste aquí
+    num_dogc = base_dogc_number + days_difference - 1
     return f"https://dogc.gencat.cat/es/sumari-del-dogc/?numDOGC={num_dogc}"
 
 def get_boe_url():
     today = datetime.today()
     holidays = get_holidays(today.year, "spain")
-    if today.weekday() <= 5 and (today.month, today.day) not in holidays:  # Lunes a sábado
+    if today.weekday() <= 5 and (today.month, today.day) not in holidays:
         date = today
     else:
         date = get_previous_saturday_business_day(today, "spain")
     return f"https://www.boe.es/boe/dias/{date.year}/{date.month:02d}/{date.day:02d}/"
+
+def get_urls():
+    """Función para obtener las URLs dinámicamente"""
+    return [
+        "https://dogv.gva.es/es/inici",
+        get_boe_url(),
+        get_dogc_url(),
+        "https://sede.asturias.es/ultimos-boletines?p_r_p_summaryLastBopa=true",
+        *get_bocm_url(),
+        "https://bop.diba.cat/butlleti-del-dia?bopb_dia%5BtipologiaAnunciant%5D=221"
+    ]
+
+def get_keywords():
+    """Función para obtener las keywords"""
+    return ["subvención", "subvenciones", "subvenció", "licitació", "licitación", "contrato", "contracte", "contractació", "contratos"]
 
 def scrape_multiple_websites(urls, keywords):
     options = Options()
@@ -92,7 +104,7 @@ def scrape_multiple_websites(urls, keywords):
                 scraped_data.extend(scrape_bopa(driver, url, keywords))
                 continue
             if "bocm.es" in url:
-                scraped_data.extend(scrape_bocm(driver, url,keywords))
+                scraped_data.extend(scrape_bocm(driver, url, keywords))
                 continue
             if "bop.diba.cat" in url:
                 scraped_data.extend(scrape_bopdiba(driver, url, keywords))
@@ -138,31 +150,51 @@ def scrape_multiple_websites(urls, keywords):
     print("✅ Scraped Data:", scraped_data)
     return scraped_data
 
-urls = [
-    "https://dogv.gva.es/es/inici",
-    get_boe_url(),
-    get_dogc_url(),
-    "https://sede.asturias.es/ultimos-boletines?p_r_p_summaryLastBopa=true",
-    *get_bocm_url(),
-    # get_bopdiba_url()
-    "https://bop.diba.cat/butlleti-del-dia?bopb_dia%5BtipologiaAnunciant%5D=221"
-]
-
-keywords = ["subvención", "subvenciones", "subvenció", "licitació", "licitación", "contrato", "contracte", "contractació", "contratos"]
-
-scraped_data = scrape_multiple_websites(urls, keywords)
-
-for item in scraped_data:
-    if item.get("url"):
+def save_scraped_data(scraped_data):
+    """Función para guardar los datos scrapeados en la base de datos"""
+    for item in scraped_data:
         try:
+            # Determinar región y organismo basado en la URL
+            url_base = item.get("url_base", "")
+            
+            if "boe.es" in url_base:
+                region = "Nacional"
+                organism = "BOE"
+            elif "bocm.es" in url_base:
+                region = "Madrid"
+                organism = "BOCM"
+            elif "dogc.gencat.cat" in url_base:
+                region = "Cataluña"
+                organism = "DOGC"
+            elif "dogv.gva.es" in url_base:
+                region = "Valencia"
+                organism = "DOGV"
+            elif "sede.asturias.es" in url_base:
+                region = "Asturias"
+                organism = "BOPA"
+            elif "bop.diba.cat" in url_base:
+                region = "Cataluña"
+                organism = "BOPDIBA"
+            else:
+                region = "Nacional"
+                organism = "BOE"
+
             obj = ScrapedItem.objects.create(
                 url_base=item.get("url_base"),
                 title=item.get("title"),
                 link=item.get("link"),
                 pdf_url=item.get("pdf_url"),
-                region=result["region"] if "region" in item else "Nacional",
-                organism=result["organism"]
+                region=region,
+                organism=organism
             )
             print("Guardado:", obj)
         except Exception as e:
             print("❌ Error guardando:", e)
+
+urls = get_urls()
+keywords = get_keywords()
+
+
+if __name__ == "__main__":
+    scraped_data = scrape_multiple_websites(urls, keywords)
+    save_scraped_data(scraped_data)
