@@ -14,13 +14,20 @@ chmod 666 /var/log/cron.log
 python manage.py makemigrations
 python manage.py migrate
 
-# Test if cron is working
-echo "Testing cron setup..."
-crontab -l
-echo "Cron jobs listed above"
-
 # Check if cron service is running
 ps aux | grep cron
+
+# Execute initial scraping to verify functionality
+python manage.py scrape
+
+# Verify if data was saved
+python manage.py shell -c "
+from scraper.models import ScrapedItem
+count = ScrapedItem.objects.count()
+if count > 0:
+    latest = ScrapedItem.objects.latest('created_at')
+    print(f'Latest element: {latest.title[:50]}...')
+"
 
 # Start following the cron log in background (for debugging)
 tail -f /var/log/cron.log &
