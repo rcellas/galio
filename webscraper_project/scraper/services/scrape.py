@@ -164,11 +164,9 @@ def save_scraped_data(scraped_data):
         except Exception as e:
             print("❌ Error guardando:", e)
 
-# Variables disponibles para importar
 urls = get_urls()
 keywords = get_keywords()
 
-# Solo ejecutar si se llama directamente este archivo
 if __name__ == "__main__":
     scraped_data = scrape_multiple_websites(urls, keywords)
     save_scraped_data(scraped_data)
