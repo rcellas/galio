@@ -24,7 +24,6 @@ python manage.py scrape
 python manage.py shell -c "
 from scraper.models import ScrapedItem
 count = ScrapedItem.objects.count()
-print(f'Total elements in DB: {count}')
 if count > 0:
     latest = ScrapedItem.objects.latest('created_at')
     print(f'Latest element: {latest.title[:50]}...')
