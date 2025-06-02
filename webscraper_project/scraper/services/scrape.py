@@ -5,6 +5,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
+import os
 from datetime import datetime, timedelta
 from scraper.models import ScrapedItem
 
@@ -87,19 +88,43 @@ def scrape_multiple_websites(urls, keywords):
     options.add_argument('--disable-plugins')
     options.add_argument('--disable-images')
     options.add_argument('--window-size=1920,1080')
-    options.add_argument('--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36')
+    options.add_argument('--user-agent=Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101 Firefox/91.0')
+    
     
     options.set_preference('dom.ipc.plugins.enabled.libflashplayer.so', False)
     options.set_preference('media.volume_scale', '0.0')
+    options.set_preference('dom.webnotifications.enabled', False)
+    options.set_preference('dom.push.enabled', False)
+    options.set_preference('browser.safebrowsing.enabled', False)
+    options.set_preference('browser.safebrowsing.malware.enabled', False)
+    options.set_preference('marionette.port', 2828)
+    
+
+    os.environ['MOZ_HEADLESS'] = '1'
+    os.environ['DISPLAY'] = ':99'
     
     service = Service("/usr/local/bin/geckodriver")
     
-    try:
-        driver = webdriver.Firefox(service=service, options=options)
-        driver.set_page_load_timeout(30)
-        driver.implicitly_wait(10)
-    except Exception as e:
-        print(f"❌ Error inicializando Firefox: {e}")
+    driver = None
+    max_retries = 3
+    
+    for attempt in range(max_retries):
+        try:
+            print(f"🔄 Intentando inicializar Firefox (intento {attempt + 1}/{max_retries})")
+            driver = webdriver.Firefox(service=service, options=options)
+            driver.set_page_load_timeout(30)
+            driver.implicitly_wait(10)
+            print("✅ Firefox inicializado correctamente")
+            break
+        except Exception as e:
+            print(f"❌ Error en intento {attempt + 1}: {e}")
+            if attempt == max_retries - 1:
+                print("❌ No se pudo inicializar Firefox después de varios intentos")
+                return []
+            time.sleep(2) 
+    
+    if not driver:
+        print("❌ No se pudo crear el driver")
         return []
     
     scraped_data = []
@@ -170,19 +195,20 @@ def scrape_multiple_websites(urls, keywords):
     except Exception as e:
         print("❌ Error general:", e)
     finally:
-        try:
-            driver.quit()
-        except:
-            pass
+        if driver:
+            try:
+                driver.quit()
+                print("🔄 Firefox cerrado correctamente")
+            except:
+                print("⚠️ Error cerrando Firefox")
 
-    print("✅ Scraped Data:", scraped_data)
+    print(f"✅ Scraping completado. {len(scraped_data)} elementos encontrados")
     return scraped_data
 
 def save_scraped_data(scraped_data):
     """Función para guardar los datos scrapeados en la base de datos"""
     for item in scraped_data:
         try:
-            # Determinar región y organismo basado en la URL
             url_base = item.get("url_base", "")
             
             if "boe.es" in url_base:
@@ -221,6 +247,7 @@ def save_scraped_data(scraped_data):
 
 urls = get_urls()
 keywords = get_keywords()
+
 
 if __name__ == "__main__":
     scraped_data = scrape_multiple_websites(urls, keywords)

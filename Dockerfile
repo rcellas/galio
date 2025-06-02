@@ -10,17 +10,6 @@ ENV PYTHONUNBUFFERED=1
 # Set working directory
 WORKDIR /app
 
-# Create a non-privileged user that the app will run under
-# ARG UID=10001
-# RUN adduser \
-#     --disabled-password \
-#     --gecos "" \
-#     --home "/nonexistent" \
-#     --shell "/sbin/nologin" \
-#     --no-create-home \
-#     --uid "${UID}" \
-#     appuser
-
 # Switch to root to install system dependencies
 USER root
 RUN apt-get update && apt-get install -y \
@@ -66,8 +55,9 @@ RUN crontab /etc/cron.d/scrape-cron
 RUN mkdir -p /tmp/cache/fontconfig && chmod 777 /tmp/cache/fontconfig
 ENV FONTCONFIG_PATH=/tmp/cache/fontconfig
 
-# Assign a valid home directory to appuser
-# RUN usermod -d /home/appuser appuser && mkdir -p /home/appuser && chown appuser:appuser /home/appuser
+# Variables de entorno para Firefox en Docker
+ENV MOZ_HEADLESS=1
+ENV DISPLAY=:99
 
 # Download and install GeckoDriver
 RUN case $(dpkg --print-architecture) in \
@@ -96,9 +86,6 @@ COPY . .
 # Copy entrypoint script
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
-
-# Switch to non-privileged user
-#USER appuser
 
 # Expose the port used by the application
 EXPOSE 8000
